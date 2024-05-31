@@ -40,6 +40,10 @@ protected:
 
 	void SwitchOnCity();
 
+	void BreakTime();
+
+	void SecondCounterCallback();
+
 private:
 
 	FHttpModule* Http;
@@ -50,4 +54,19 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Time, meta = (AllowPrivateAccess = "true"))
 	FDateTime Time;
+
+	int32 Hour;
+	int32 Minute;
+	int32 Second;
+
+	FTimerHandle SecondCounter;
+	float SecondCountFloat;
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+	FText GetCurrentTime();
+
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentCity(ECity CurrentCity);
 };
