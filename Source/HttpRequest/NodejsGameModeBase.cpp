@@ -70,3 +70,31 @@ void ANodejsGameModeBase::MyHTTPGetRequest()
 void ANodejsGameModeBase::MyHTTPPostRequest()
 {
 }
+
+void ANodejsGameModeBase::SetJsonBaseName(FText NewName)
+{
+	JsonBaseData.Name = NewName.ToString();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData Name is : %s"), *(JsonBaseData.Name)));
+}
+
+void ANodejsGameModeBase::SetJsonBaseDescription(FText NewDescription)
+{
+	JsonBaseData.Description = NewDescription.ToString();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData Description is : %s"), *(JsonBaseData.Description)));
+}
+
+void ANodejsGameModeBase::SetJsonBaseColor(FText NewColor)
+{
+	JsonBaseData.Color = NewColor.ToString();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData Color is : %s"), *(JsonBaseData.Color)));
+}
+
+void ANodejsGameModeBase::SetJsonBaseNumber(FText NewNumber)
+{
+	JsonBaseData.Number = FCString::Atoi(*(NewNumber.ToString()));
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData Number is : %d"), JsonBaseData.Number));
+}

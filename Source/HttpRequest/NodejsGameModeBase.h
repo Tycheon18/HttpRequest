@@ -45,6 +45,8 @@ protected:
 
 private:
 
+	FJsonBaseData JsonBaseData;
+
 	FHttpModule* Http;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Allowprivateaccess = true), Category = "HTTP")
@@ -58,5 +60,17 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HTTP")
 	void MyHTTPPostRequest();
+
+	UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void SetJsonBaseName(FText NewName);
+
+	UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void SetJsonBaseDescription(FText NewDescription);
+
+	UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void SetJsonBaseColor(FText NewColor);
+
+	UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void SetJsonBaseNumber(FText NewNumber);
 
 };
