@@ -29,7 +29,7 @@ void ANodejsGameModeBase::SendHTTPJsonPost(const FString& URL, const FJsonBaseDa
 		{
 			if (bWasSuccessful && Response.IsValid())
 			{
-				UE_LOG(LogTemp, Log, TEXT("Post Success! Response : %s"), *Response);
+				UE_LOG(LogTemp, Log, TEXT("Post Success! Response : %s"), *Response->GetContentAsString());
 			}
 			else
 			{
@@ -140,16 +140,6 @@ void ANodejsGameModeBase::ConnectWebSocket(const FString& URL)
 				UE_LOG(LogTemp, Log, TEXT("WebSocket 연결 성공!"));
 			});
 
-		WebSocket->OnMessage().AddLambda([](const FString& Message)
-			{
-				UE_LOG(LogTemp, Log, TEXT("서버로부터 메시지 수신: %s"), *Message);
-			});
-
-		WebSocket->OnConnectionError().AddLambda([](const FString& Error)
-			{
-				UE_LOG(LogTemp, Error, TEXT("WebSocket 연결 실패: %s"), *Error);
-			});
-
 		WebSocket->Connect();
 	}
 }
@@ -161,10 +151,6 @@ void ANodejsGameModeBase::SendJsonViaWebSocket()
 		FString JsonString = JsonBaseData.ToJson();
 		WebSocket->Send(JsonString);
 		UE_LOG(LogTemp, Log, TEXT("WebSocket으로 JSON 전송: %s"), *JsonString);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("WebSocket이 연결되지 않음! 먼저 ConnectWebSocket() 호출 필요"));
 	}
 	
 }
