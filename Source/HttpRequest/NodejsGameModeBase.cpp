@@ -6,6 +6,7 @@
 ANodejsGameModeBase::ANodejsGameModeBase() : ResponseBody("Nothing Yet")
 {
 	Http = &FHttpModule::Get();
+	JsonBaseData = FJsonBaseData();
 }
 
 void ANodejsGameModeBase::SendHTTPGet()
@@ -19,46 +20,61 @@ void ANodejsGameModeBase::SendHTTPGet()
 	Request->ProcessRequest();
 }
 
-void ANodejsGameModeBase::SendHTTPPost()
+void ANodejsGameModeBase::SendHTTPJsonPost(const FString& URL, const FJsonBaseData& JsonData)
 {
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
+	//Request->OnProcessRequestComplete().BindUObject(this, &ANodejsGameModeBase::OnPostResponse);
 
-	FString RequestBody;
+	Request->OnProcessRequestComplete().BindLambda([](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{
+			if (bWasSuccessful && Response.IsValid())
+			{
+				UE_LOG(LogTemp, Log, TEXT("Post Success! Response : %s"), *Response);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Post Failed!"));
+			}
 
-	Request->OnProcessRequestComplete().BindUObject(this, &ANodejsGameModeBase::OnGetResponse);
-	Request->SetURL("http://localhost:3000");
-	Request->SetVerb("POST");
+		});
+
+	Request->SetURL(URL);
+	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader("Content-Type", "application/json");
-	Request->SetContentAsString(RequestBody);
+
+	JsonBaseData.CreatedAt = FDateTime::UtcNow().ToString();
+	FString JsonPayload = JsonBaseData.ToJson();
+
+	Request->SetContentAsString(JsonPayload);
 	Request->ProcessRequest();
-
-
 
 }
 
 void ANodejsGameModeBase::OnGetResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 {
-	if (bConnectedSuccessfully)
+	if (bConnectedSuccessfully && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
-		if (Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-		{
-			ResponseBody = Response->GetContentAsString();
-		}
-		else
-		{
-			if (Response.IsValid())
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Something went wrong with the request. Status Code : %d"), Response->GetResponseCode()));
-			}
-			else
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Response is invalid. Server is down or not responding"));
-			}
-		}
+		ResponseBody = Response->GetContentAsString();
+
+		JsonBaseData.FromJson(ResponseBody);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Updated JsonBaseData : Name = %s, Description = %s, Color = %s, Number = %d, CreatedAt = %s"), *JsonBaseData.Name, *JsonBaseData.Description, *JsonBaseData.Color, JsonBaseData.Number, *JsonBaseData.CreatedAt));
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Failed to Connect to the Server"));
+	}
+}
+
+void ANodejsGameModeBase::OnPostResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
+{
+	if (bConnectedSuccessfully && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Post Request Successful!"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Request Falied.."));
 	}
 }
 
@@ -69,6 +85,12 @@ void ANodejsGameModeBase::MyHTTPGetRequest()
 
 void ANodejsGameModeBase::MyHTTPPostRequest()
 {
+	FString URL = TEXT("http://localhost:3000/api/data");
+
+	FJsonBaseData MyData;
+	MyData.CreatedAt = FDateTime::UtcNow().ToString();
+
+	SendHTTPJsonPost(URL, MyData);
 }
 
 void ANodejsGameModeBase::SetJsonBaseName(FText NewName)
@@ -97,4 +119,52 @@ void ANodejsGameModeBase::SetJsonBaseNumber(FText NewNumber)
 	JsonBaseData.Number = FCString::Atoi(*(NewNumber.ToString()));
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData Number is : %d"), JsonBaseData.Number));
+}
+
+void ANodejsGameModeBase::SetJsonBaseCreatedAt(FText NewCreatedAt)
+{
+	JsonBaseData.CreatedAt = NewCreatedAt.ToString();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("JsonBaseData CreatedAt is : %s"), *JsonBaseData.CreatedAt));
+}
+
+void ANodejsGameModeBase::ConnectWebSocket(const FString& URL)
+{
+	if (!WebSocket.IsValid())
+	{
+		FWebSocketsModule& WebSocketModule = FModuleManager::LoadModuleChecked<FWebSocketsModule>("WebSockets");
+		WebSocket = WebSocketModule.CreateWebSocket(URL);
+
+		WebSocket->OnConnected().AddLambda([]()
+			{
+				UE_LOG(LogTemp, Log, TEXT("WebSocket 연결 성공!"));
+			});
+
+		WebSocket->OnMessage().AddLambda([](const FString& Message)
+			{
+				UE_LOG(LogTemp, Log, TEXT("서버로부터 메시지 수신: %s"), *Message);
+			});
+
+		WebSocket->OnConnectionError().AddLambda([](const FString& Error)
+			{
+				UE_LOG(LogTemp, Error, TEXT("WebSocket 연결 실패: %s"), *Error);
+			});
+
+		WebSocket->Connect();
+	}
+}
+
+void ANodejsGameModeBase::SendJsonViaWebSocket()
+{
+	if (WebSocket.IsValid() && WebSocket->IsConnected())
+	{
+		FString JsonString = JsonBaseData.ToJson();
+		WebSocket->Send(JsonString);
+		UE_LOG(LogTemp, Log, TEXT("WebSocket으로 JSON 전송: %s"), *JsonString);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WebSocket이 연결되지 않음! 먼저 ConnectWebSocket() 호출 필요"));
+	}
+	
 }
