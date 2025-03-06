@@ -135,9 +135,25 @@ void ANodejsGameModeBase::ConnectWebSocket(const FString& URL)
 		FWebSocketsModule& WebSocketModule = FModuleManager::LoadModuleChecked<FWebSocketsModule>("WebSockets");
 		WebSocket = WebSocketModule.CreateWebSocket(URL);
 
-		WebSocket->OnConnected().AddLambda([]()
+		WebSocket->OnConnected().AddLambda([this]()
 			{
+				bIsWebSocketConnected = true;
 				UE_LOG(LogTemp, Log, TEXT("WebSocket 연결 성공!"));
+				UpdateWebSocketUI(true);
+			});
+
+		WebSocket->OnConnectionError().AddLambda([this](const FString& Error)
+			{
+				bIsWebSocketConnected = false;
+				UE_LOG(LogTemp, Log, TEXT("WebSocket 연결 실패 : %s"), *Error);
+				UpdateWebSocketUI(false);
+			});
+
+		WebSocket->OnClosed().AddLambda([this](int32 StatusCode, const FString& Reason, bool bWasClear)
+			{
+				bIsWebSocketConnected = false;
+				UE_LOG(LogTemp, Log, TEXT("WebSocket 연결 해제 : %s"), *Reason);
+				UpdateWebSocketUI(false);
 			});
 
 		WebSocket->Connect();
@@ -154,3 +170,4 @@ void ANodejsGameModeBase::SendJsonViaWebSocket()
 	}
 	
 }
+

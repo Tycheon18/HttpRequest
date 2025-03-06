@@ -92,6 +92,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "JSON")
 	void SendHTTPJsonPost(const FString& URL , const FJsonBaseData& JsonData);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WebSocket")
+	bool bIsWebSocketConnected = false;
+
 private:
 
 	FJsonBaseData JsonBaseData;
@@ -133,6 +136,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	void SendJsonViaWebSocket();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "WebSocket")
+	void UpdateWebSocketUI(bool bConnected);
 protected:
 
 

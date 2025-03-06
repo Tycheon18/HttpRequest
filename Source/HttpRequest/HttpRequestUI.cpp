@@ -72,6 +72,7 @@ void UHttpRequestUI::SetButtonsEnabled(bool bEnabled)
 	{
 		SendWebSocketButton->SetIsEnabled(bEnabled);
 	}
+
 }
 
 void UHttpRequestUI::OnWebSocketConnected()
