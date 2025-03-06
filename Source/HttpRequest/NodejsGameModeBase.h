@@ -82,6 +82,8 @@ public:
 
 	ANodejsGameModeBase();
 
+	virtual void BeginPlay() override;
+
 protected:
 
 	TSharedPtr<IWebSocket> WebSocket;
@@ -138,6 +140,13 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "WebSocket")
 	void UpdateWebSocketUI(bool bConnected);
+
+	UFUNCTION(BlueprintCallable, Category = "SaveGame")
+	void SaveJsonData();
+
+	UFUNCTION(BlueprintCallable, Category = "SaveGame")
+	void LoadJsonData();
+
 protected:
 
 

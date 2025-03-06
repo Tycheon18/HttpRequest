@@ -2,11 +2,20 @@
 
 
 #include "NodejsGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "JsonSaveGame.h"
 
 ANodejsGameModeBase::ANodejsGameModeBase() : ResponseBody("Nothing Yet")
 {
 	Http = &FHttpModule::Get();
 	JsonBaseData = FJsonBaseData();
+}
+
+void ANodejsGameModeBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LoadJsonData();
 }
 
 void ANodejsGameModeBase::SendHTTPGet()
@@ -169,5 +178,37 @@ void ANodejsGameModeBase::SendJsonViaWebSocket()
 		UE_LOG(LogTemp, Log, TEXT("WebSocket으로 JSON 전송: %s"), *JsonString);
 	}
 	
+}
+
+void ANodejsGameModeBase::SaveJsonData()
+{
+	UJsonSaveGame* SaveGameInstance = NewObject<UJsonSaveGame>();
+
+	if (SaveGameInstance)
+	{
+		SaveGameInstance->SavedJsonData = JsonBaseData.ToJson();
+
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("JsonSaveSlot"), 0);
+		UE_LOG(LogTemp, Log, TEXT("JSON 데이터 저장"));
+	}
+}
+
+void ANodejsGameModeBase::LoadJsonData()
+{
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("JsonSaveSlot"), 0))
+	{
+		UJsonSaveGame* LoadGameInstance = StaticCast<UJsonSaveGame*>(UGameplayStatics::LoadGameFromSlot(TEXT("JsonSaveSlot"), 0));
+
+		if (LoadGameInstance)
+		{
+
+			JsonBaseData.FromJson(LoadGameInstance->SavedJsonData);
+			UE_LOG(LogTemp, Log, TEXT("JSON 데이터 로딩"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("저장된 JSON 데이터가 없음."));
+	}
 }
 
