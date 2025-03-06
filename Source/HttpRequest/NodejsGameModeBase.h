@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Http.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 #include "WebSocketsModule.h"
 #include "IWebSocket.h"
 #include "NodejsGameModeBase.generated.h"
@@ -105,6 +108,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Allowprivateaccess = true), Category = "HTTP")
 	FString ResponseBody;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Allowprivateaccess = true), Category = "HTTP")
+	FString LastHttpResponse;
+
 public:
 
 	void OnGetResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
@@ -116,6 +123,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HTTP")
 	void MyHTTPPostRequest();
+
+	UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void UpdateHttpResponse(const FString& ResponseText);
+
+	//UFUNCTION(BlueprintCallable, Category = "HTTP")
+	void OnHttpResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 
 	UFUNCTION(BlueprintCallable, Category = "JSON")
 	void SetJsonBaseName(FText NewName);

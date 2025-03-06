@@ -102,6 +102,24 @@ void ANodejsGameModeBase::MyHTTPPostRequest()
 	SendHTTPJsonPost(URL, MyData);
 }
 
+void ANodejsGameModeBase::UpdateHttpResponse(const FString& ResponseText)
+{
+	LastHttpResponse = ResponseText;
+	UE_LOG(LogTemp, Log, TEXT("서버 응답 : %s"), *LastHttpResponse);
+}
+
+void ANodejsGameModeBase::OnHttpResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
+{
+	if (bConnectedSuccessfully && Response.IsValid())
+	{
+		UpdateHttpResponse(Response->GetContentAsString());
+	}
+	else
+	{
+		UpdateHttpResponse(TEXT("Server Response Failed"));
+	}
+}
+
 void ANodejsGameModeBase::SetJsonBaseName(FText NewName)
 {
 	JsonBaseData.Name = NewName.ToString();
